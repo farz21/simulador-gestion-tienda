@@ -2,35 +2,31 @@ using System;
 
 namespace GestionTiendaUTN.UI
 {
-    // CLASE ESTÁTICA (UTILIDAD DE INTERFAZ DE USUARIO)
-    // No se puede instanciar → solo contiene métodos estáticos
-    // Se usa para centralizar toda la interacción visual (menús)
     public static class MenuUI
     {
-        // MÉTODO ESTÁTICO
-        // Muestra el menú principal del sistema
+        // Métodos para mostrar los menús de la aplicación
         public static void MostrarMenuPrincipal()
         {
-            Console.WriteLine("\n--- SISTEMA DE GESTIÓN TIENDA UTN ---");
+            Console.Clear(); // Limpia pantalla automáticamente
+
+            Console.WriteLine("--- SISTEMA TIENDA UTN ---");
             Console.WriteLine("1 - Sucursal Centro");
             Console.WriteLine("2 - Sucursal Norte");
-            Console.WriteLine("3 - Ver Reporte Global");
             Console.WriteLine("0 - Salir");
-            Console.Write("Seleccione: ");
+            Console.Write("Opcion: ");
         }
 
-        // MÉTODO ESTÁTICO
-        // Muestra el menú de acciones para una sucursal específica
-        public static void MostrarMenuAcciones(string sucursalNombre)
+        public static void MostrarMenuAcciones(string nombre)
         {
-            // ToUpper() → mejora visual (formato uniforme)
-            Console.WriteLine($"\n--- SUCURSAL {sucursalNombre.ToUpper()} ---");
+            Console.Clear(); // Limpia cada vez que entra al menú
 
+            Console.WriteLine($"--- SUCURSAL {nombre.ToUpper()} ---");
             Console.WriteLine("1 - Agregar producto");
-            Console.WriteLine("2 - Listar productos");
+            Console.WriteLine("2 - Lista de productos");
             Console.WriteLine("3 - Vender producto");
-            Console.WriteLine("4 - Volver");
-            Console.Write("Acción: ");
+            Console.WriteLine("4 - Ver ventas");
+            Console.WriteLine("5 - Volver");
+            Console.Write("Opcion: ");
         }
     }
 }

@@ -4,51 +4,62 @@ using GestionTiendaUTN.Models;
 
 namespace GestionTiendaUTN.Services
 {
-    // COMPOSICIÓN
-    // Una Sucursal "TIENE" productos (no hereda de ellos)
-    // Relación: Sucursal → contiene una lista de Producto
     public class Sucursal
     {
-        // Nombre de la sucursal
-        public string Nombre { get; set; } = string.Empty;
+        // Nombre identificativo de la sucursal
+        public string Nombre { get; set; }
 
-        // Lista privada de productos (encapsulación)
-        // Solo se puede modificar a través de métodos de la clase
+        // Cada sucursal tiene su propio inventario y registro de ventas
         private List<Producto> inventario = new List<Producto>();
+        private List<Venta> ventas = new List<Venta>(); // Historial de ventas
 
-        // CONSTRUCTOR
+        // Constructor para inicializar la sucursal con un nombre
         public Sucursal(string nombre)
         {
             Nombre = nombre;
         }
 
-        // MÉTODO DE INSTANCIA
-        // Agrega un producto al inventario
+            // Agrega un producto al inventario de la sucursal
         public void AgregarProducto(Producto p) => inventario.Add(p);
 
-        // LISTAR PRODUCTOS
-        public void ListarProductos()
+        public void ListarProductos() // Muestra el inventario actual de la sucursal
         {
-            Console.WriteLine($"\n--- Inventario Sucursal {Nombre} ---");
+            Console.WriteLine($"\n--- Inventario {Nombre} ---");
 
-            // Validación: lista vacía
-            if (inventario.Count == 0)
+            if (inventario.Count == 0) // Si no hay productos, se muestra un mensaje
             {
                 Console.WriteLine("Sin stock.");
                 return;
             }
 
-            // POLIMORFISMO:
-            // Cada producto ejecuta su propia versión de MostrarDetalles()
-            foreach (var p in inventario)
+            foreach (var p in inventario) // Recorre cada producto y muestra sus detalles
                 p.MostrarDetalles();
         }
 
-        // BÚSQUEDA POR CÓDIGO
-        public Producto? BuscarPorCodigo(int codigo)
+         // Busca un producto por su código en el inventario de la sucursal
+        public Producto? BuscarPorCodigo(int codigo) 
+{
+    return inventario.Find(p => p.Codigo == codigo);
+}
+
+        // Registra una venta realizada en la sucursal, agregándola al historial de ventas
+       public void RegistrarVenta(Venta v)
+             {
+               ventas.Add(v);
+             }
+        // Muestra el historial de ventas realizadas en la sucursal
+        public void MostrarVentas()
         {
-            // Uso de expresión lambda (búsqueda en lista)
-            return inventario.Find(p => p.Codigo == codigo);
+            Console.WriteLine($"\n--- Ventas {Nombre} ---");
+
+            if (ventas.Count == 0)
+            {
+                Console.WriteLine("No hay ventas.");
+                return;
+            }
+
+            foreach (var v in ventas)
+                v.Mostrar();
         }
     }
 }
