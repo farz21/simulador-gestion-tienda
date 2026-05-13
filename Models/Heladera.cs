@@ -9,8 +9,9 @@ namespace GestionTiendaUTN.Models
         public string Tipo { get; set; }
         public int CapacidadLitros { get; set; }
 
-        public Heladera(int c, string n, string m, decimal p, int s, string tipo, int litros)
-            : base(c, n, m, p, s)
+        // 1. Eliminamos "string m" del constructor y no se lo pasamos al base()
+        public Heladera(int c, string n, decimal p, int s, string tipo, int litros)
+            : base(c, n, p, s)
         {
             Tipo = tipo;
             CapacidadLitros = litros;
@@ -18,9 +19,11 @@ namespace GestionTiendaUTN.Models
 
         public override decimal CalcularPrecioFinal()
         {
-            // Ejemplo de lógica: Samsung paga IVA
-            if (Marca.ToUpper() == "SAMSUNG")
+            // 2. Como no hay "Marca", buscamos si el "Nombre" incluye la palabra Samsung
+            if (Nombre.ToUpper().Contains("SAMSUNG"))
+            {
                 return Precio * 1.21m;
+            }
 
             return Precio;
         }

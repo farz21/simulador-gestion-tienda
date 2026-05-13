@@ -23,9 +23,11 @@ namespace GestionTiendaUTN.UI
             Console.WriteLine($"--- SUCURSAL {nombre.ToUpper()} ---");
             Console.WriteLine("1 - Agregar producto");
             Console.WriteLine("2 - Lista de productos");
-            Console.WriteLine("3 - Vender producto");
-            Console.WriteLine("4 - Ver ventas");
-            Console.WriteLine("5 - Volver");
+            Console.WriteLine("3 - Modificar producto");
+            Console.WriteLine("4 - Eliminar producto");
+            Console.WriteLine("5 - Vender producto");
+            Console.WriteLine("6 - Ver ventas"); 
+            Console.WriteLine("7 - Volver");        
             Console.Write("Opcion: ");
         }
     }

@@ -3,36 +3,71 @@ using GestionTiendaUTN.Models;
 using GestionTiendaUTN.Services;
 using GestionTiendaUTN.UI;
 using GestionTiendaUTN.Utils;
+using GestionTiendaUTN.Repositories;
+using System.Collections.Generic;
 
 namespace GestionTiendaUTN
 {
     class Program
     {
-        static void Main() 
+        static void Main()
         {
-          // Creación de sucursales
+            bool salir = false;
+            // =========================
+            // CREACIÓN DE SUCURSALES
+            // =========================
             Sucursal sucursalCentro = new Sucursal("Centro");
             Sucursal sucursalNorte = new Sucursal("Norte");
 
-            // Carga inicial de productos en cada sucursal
-            sucursalCentro.AgregarProducto(new Televisor(101, "Smart TV", "Samsung", 500000, 10, 55, "Smart"));
-            sucursalCentro.AgregarProducto(new Heladera(102, "Frio Plus", "Samsung", 800000, 5, "No Frost", 400));
-            sucursalNorte.AgregarProducto(new Lavarropas(201, "Carga Front", "Whirlpool", 400000, 8, 9, "Automatico"));
+            // =========================================
+            // CARGAR PRODUCTOS DESDE MYSQL
+            // =========================================
+            ProductoRepository repo = new ProductoRepository(); // Instancia del repositorio para acceder a la base de datos
 
-            bool salir = false;
+            List<Producto> productosDB = repo.ObtenerProductos(); // Obtenemos la lista de productos desde la base de datos
 
+            foreach (Producto p in productosDB) // Recorremos cada producto obtenido
+            {
+                // Según el código decidimos sucursal
+                if (p.Codigo < 200)
+                {
+                    sucursalCentro.AgregarProducto(p);
+                }
+                else // Si el código es 200 o más, va a la sucursal Norte
+                {
+                    sucursalNorte.AgregarProducto(p);
+                }
+            }
+
+            // =========================
+            // MENÚ PRINCIPAL
+            // =========================
             while (!salir)
             {
-                Console.Clear(); // 🔹 Limpia consola automáticamente
+                Console.Clear();
+
                 MenuUI.MostrarMenuPrincipal();
 
-                string opcion = Console.ReadLine() ?? ""; // Evitar null con operador de fusión
-                 // Manejo de opciones del menú principal
+                string opcion = Console.ReadLine() ?? "";
+
                 switch (opcion)
                 {
-                    case "1": EjecutarMenu(sucursalCentro); break;
-                    case "2": EjecutarMenu(sucursalNorte); break;
-                    case "0": salir = true; break;
+                    case "1":
+                        EjecutarMenu(sucursalCentro);
+                        break;
+
+                    case "2":
+                        EjecutarMenu(sucursalNorte);
+                        break;
+
+                    case "0":
+                        salir = true;
+                        break;
+
+                    default:
+                        Console.WriteLine("Opción inválida.");
+                        Pausa();
+                        break;
                 }
             }
         }
@@ -47,17 +82,45 @@ namespace GestionTiendaUTN
             while (!volver)
             {
                 Console.Clear();
+
                 MenuUI.MostrarMenuAcciones(s.Nombre);
 
                 string accion = Console.ReadLine() ?? "";
 
                 switch (accion)
                 {
-                    case "1": MenuCargar(s); break;
-                    case "2": s.ListarProductos(); Pausa(); break;
-                    case "3": MenuVender(s); break;
-                    case "4": s.MostrarVentas(); Pausa(); break;
-                    case "5": volver = true; break;
+                    case "1":
+                        MenuCargar(s);
+                        break;
+                    case "2":
+                        Console.Clear();
+                        Console.WriteLine($"--- PRODUCTOS EN SUCURSAL {s.Nombre.ToUpper()} ---\n");
+                        s.ListarProductos();
+                        Pausa();
+                        break;
+                    case "3":
+                        MenuModificar(s); // Nueva opción
+                        break;
+                    case "4":
+                        MenuEliminar(s); // Nueva opción
+                        break;
+                    case "5":
+                        MenuVender(s);
+                        break;
+                    case "6":
+                        Console.Clear();
+                        Console.WriteLine($"--- VENTAS EN SUCURSAL {s.Nombre.ToUpper()} ---\n");
+                        s.MostrarVentas();
+                        Pausa();
+                        break;
+                    case "7": // Cambiamos el volver al número 7
+                    case "0":
+                        volver = true;
+                        break;
+                    default:
+                        Console.WriteLine("\nOpción inválida.");
+                        Pausa();
+                        break;
                 }
             }
         }
@@ -67,71 +130,264 @@ namespace GestionTiendaUTN
         // =========================
         static void MenuCargar(Sucursal s)
         {
+            ProductoRepository repo = new ProductoRepository();
             try
             {
                 Console.Clear();
 
-                // Validación de código único para el nuevo producto
-                if (!LeerEntero("Cod: ", out int c)) return;
+                // =========================
+                // VALIDAR CÓDIGO ÚNICO
+                // =========================
+                int c;
 
-                if (s.BuscarPorCodigo(c) != null)
+                while (true)
                 {
-                    Console.WriteLine("Código duplicado.");
-                    Pausa();
-                    return;
+                    c = LeerEntero("Cod: ");
+
+                    // Si el código NO existe en esta sucursal, se permite continuar
+                    if (s.BuscarPorCodigo(c) == null)
+                    {
+                        break;
+                    }
+
+                    Console.WriteLine("Código duplicado en esta sucursal. Ingrese otro.");
                 }
 
-                Console.Write("Tipo (1:TV, 2:Hel, 3:Lav): ");
-                string t = Console.ReadLine() ?? "";
+                // =========================
+                // VALIDAR TIPO DE PRODUCTO
+                // =========================
+                string t;
 
+                while (true)
+                {
+                    Console.Write("Tipo (1:TV, 2:Hel, 3:Lav): ");
+
+                    t = Console.ReadLine() ?? "";
+
+                    if (t == "1" || t == "2" || t == "3")
+                    {
+                        break;
+                    }
+
+                    Console.WriteLine("Ingrese una opción válida.");
+                }
+
+                // =========================
+                // DATOS GENERALES
+                // =========================
                 Console.Write("Nombre: ");
                 string n = Console.ReadLine() ?? "";
 
-                Console.Write("Marca: ");
-                string m = Console.ReadLine() ?? "";
+                decimal p = LeerDecimal("Precio: ");
+                int st = LeerEntero("Stock: ");
 
-                if (!LeerDecimal("Precio: ", out decimal p)) return;
-                if (!LeerEntero("Stock: ", out int st)) return;
-
-                // Carga específica según tipo de producto
-                 // TELEVISOR
+                // =========================
+                // TELEVISOR
+                // =========================
                 if (t == "1")
                 {
-                    if (!LeerEntero("Pulgadas: ", out int pulg)) return;
+                    int pulg = LeerEntero("Pulgadas: ");
 
-                    Console.Write("Tipo Pantalla (LED/Smart): ");
-                    string tipoPantalla = Console.ReadLine() ?? "";
+                    string tipoPantalla;
 
-                    s.AgregarProducto(new Televisor(c, n, m, p, st, pulg, tipoPantalla));
+                    while (true)
+                    {
+                        Console.Write("Tipo Pantalla (LED/Smart): ");
+
+                        tipoPantalla = Console.ReadLine() ?? "";
+                        tipoPantalla = tipoPantalla.ToUpper();
+
+                        if (tipoPantalla == "LED" || tipoPantalla == "SMART")
+                        {
+                            break;
+                        }
+
+                        Console.WriteLine("Ingrese las opciones disponibles (LED/Smart)");
+                    }
+                    // Creamos el objeto televisor (ya no le pasamos "Sin Marca")
+                    Televisor tv = new Televisor(
+                       c, n, p, st, pulg, tipoPantalla
+                    );
+
+                    int idSucursal = s.Nombre == "Centro" ? 1 : 2;
+
+                    // PRIMERO a la base de datos
+                    repo.AgregarProducto(tv, idSucursal);
+                    // SI TODO SALE BIEN, a la memoria
+                    s.AgregarProducto(tv);
                 }
+
+                // =========================
                 // HELADERA
+                // =========================
                 else if (t == "2")
                 {
-                    Console.Write("Tipo (Freezer/No Frost): ");
-                    string tipo = Console.ReadLine() ?? "";
+                    string tipo;
 
-                    if (!LeerEntero("Capacidad (Litros): ", out int litros)) return;
+                    while (true)
+                    {
+                        Console.Write("Tipo (Freezer/No Frost): ");
 
-                    s.AgregarProducto(new Heladera(c, n, m, p, st, tipo, litros));
+                        tipo = Console.ReadLine() ?? "";
+                        tipo = tipo.ToUpper();
+
+                        if (tipo == "FREEZER" || tipo == "NO FROST")
+                        {
+                            break;
+                        }
+
+                        Console.WriteLine("Ingrese las opciones disponibles (Freezer/No Frost)");
+                    }
+
+                    int litros = LeerEntero("Capacidad (Litros): ");
+
+                    // Creamos el objeto heladera (ya no le pasamos "Sin Marca")
+                    Heladera h = new Heladera(
+                     c, n, p, st, tipo, litros
+                    );
+
+                    int idSucursal = s.Nombre == "Centro" ? 1 : 2;
+
+                    // PRIMERO a la base de datos
+                    repo.AgregarProducto(h, idSucursal);
+                    // SI TODO SALE BIEN, a la memoria
+                    s.AgregarProducto(h);
                 }
+
+                // =========================
                 // LAVARROPAS
+                // =========================
                 else if (t == "3")
                 {
-                    if (!LeerEntero("Carga Kg: ", out int kg)) return;
+                    int kg = LeerEntero("Carga Kg: ");
 
-                    Console.Write("Tipo (Automatico/Semi): ");
-                    string tipo = Console.ReadLine() ?? "";
+                    string tipo;
 
-                    s.AgregarProducto(new Lavarropas(c, n, m, p, st, kg, tipo));
+                    while (true)
+                    {
+                        Console.Write("Tipo (Automatico/Semi): ");
+
+                        tipo = Console.ReadLine() ?? "";
+                        tipo = tipo.ToUpper();
+
+                        if (tipo == "AUTOMATICO" || tipo == "SEMI")
+                        {
+                            break;
+                        }
+
+                        Console.WriteLine("Ingrese las opciones disponibles (Automatico/Semi)");
+                    }
+                    // Creamos el objeto lavarropas (ya no le pasamos "Sin Marca")
+                    Lavarropas l = new Lavarropas(
+                      c, n, p, st, kg, tipo
+                    );
+
+                    int idSucursal = s.Nombre == "Centro" ? 1 : 2;
+
+                    // PRIMERO a la base de datos
+                    repo.AgregarProducto(l, idSucursal);
+                    // SI TODO SALE BIEN, a la memoria
+                    s.AgregarProducto(l);
                 }
 
-                Console.WriteLine("Cargado correctamente.");
+                Console.WriteLine("\nProducto cargado correctamente.");
             }
-            catch
+            catch (Exception ex)
             {
-                Console.WriteLine("Error en datos.");
+                // Ahora los errores de la BD caen acá y los vas a poder ver
+                Console.WriteLine("\nError:");
+                Console.WriteLine(ex.Message);
             }
 
+            Pausa();
+        }
+
+        // =========================
+        // MODIFICAR PRODUCTO
+        // =========================
+        static void MenuModificar(Sucursal s)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- MODIFICAR PRODUCTO EN {s.Nombre.ToUpper()} ---");
+
+            int cod = LeerEntero("Ingrese el código del producto a modificar: ");
+            Producto? p = s.BuscarPorCodigo(cod);
+
+            if (p != null)
+            {
+                Console.WriteLine($"\nEncontrado: {p.Nombre} | Precio actual: ${p.Precio} | Stock actual: {p.Stock}");
+
+                decimal nuevoPrecio = LeerDecimal("Nuevo Precio: ");
+                int nuevoStock = LeerEntero("Nuevo Stock: ");
+
+                try
+                {
+                    ProductoRepository repo = new ProductoRepository();
+                    // 1. Guardamos en la base de datos
+                    repo.ModificarProducto(cod, nuevoPrecio, nuevoStock);
+
+                    // 2. Si la BD no dio error, actualizamos la memoria local
+                    p.Precio = nuevoPrecio;
+                    p.Stock = nuevoStock;
+
+                    Console.WriteLine("\n¡Producto modificado con éxito!");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("\nError: " + ex.Message);
+                }
+            }
+            else
+            {
+                Console.WriteLine("\nProducto no encontrado en esta sucursal.");
+            }
+            Pausa();
+        }
+
+        // =========================
+        // ELIMINAR PRODUCTO
+        // =========================
+        static void MenuEliminar(Sucursal s)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- ELIMINAR PRODUCTO EN {s.Nombre.ToUpper()} ---");
+
+            int cod = LeerEntero("Ingrese el código del producto a eliminar: ");
+            Producto? p = s.BuscarPorCodigo(cod);
+
+            if (p != null)
+            {
+                Console.WriteLine($"\nEncontrado: {p.Nombre}");
+                Console.Write("¿Está seguro que desea eliminarlo permanentemente? (S/N): ");
+                string confirmacion = Console.ReadLine()?.ToUpper() ?? "";
+
+                if (confirmacion == "S")
+                {
+                    try
+                    {
+                        ProductoRepository repo = new ProductoRepository();
+                        // 1. Borramos de la base de datos
+                        repo.EliminarProducto(cod);
+
+                        // 2. Borramos de la lista en memoria
+                        s.RemoverProductoLocal(p);
+
+                        Console.WriteLine("\n¡Producto eliminado con éxito!");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("\nError: " + ex.Message);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("\nOperación cancelada.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\nProducto no encontrado en esta sucursal.");
+            }
             Pausa();
         }
 
@@ -139,85 +395,113 @@ namespace GestionTiendaUTN
         // VENDER PRODUCTO
         // =========================
         static void MenuVender(Sucursal s)
-{
-    try
-    {
-        Console.Clear();
-
-        if (!LeerEntero("Código: ", out int cod)) return;
-
-        Producto? p = s.BuscarPorCodigo(cod);
-
-        if (p != null && p.Stock > 0)
         {
-            if (!LeerEntero("Cantidad: ", out int cant)) return;
+            Console.Clear();
+            Console.WriteLine($"--- VENDER PRODUCTO EN {s.Nombre.ToUpper()} ---");
 
-            if (cant <= p.Stock)
+            int cod = LeerEntero("Código del producto a vender: ");
+
+            Producto? p = s.BuscarPorCodigo(cod);
+
+            if (p != null && p.Stock > 0)
             {
-                p.Stock -= cant;
+                Console.WriteLine($"\nProducto: {p.Nombre} | Stock disponible: {p.Stock}");
+                int cant = LeerEntero("Cantidad: ");
 
-                decimal precioFinal = p.CalcularPrecioFinal();
-                decimal total = precioFinal * cant;
+                if (cant <= p.Stock)
+                {
+                    decimal precioFinal = p.CalcularPrecioFinal();
+                    decimal total = precioFinal * cant;
+                    int idSucursal = s.Nombre == "Centro" ? 1 : 2;
 
-                // ✅ REGISTRAR VENTA EN LA SUCURSAL
-                s.RegistrarVenta(new Venta(p.Nombre, precioFinal, cant));
+                    try
+                    {
+                        ProductoRepository repo = new ProductoRepository();
 
-                // ✅ GENERAR TICKET
-                Ticket.Generar(p, cant, total);
+                        // 1. INTENTAMOS GUARDAR EN LA BASE DE DATOS (TRANSACCIÓN)
+                        repo.RegistrarVentaBD(idSucursal, p.Codigo, cant, precioFinal);
+
+                        // 2. SI LA BD FUE EXITOSA, ACTUALIZAMOS LA MEMORIA LOCAL
+                        p.Stock -= cant;
+
+                        // Registrar venta localmente (historial de memoria)
+                        s.RegistrarVenta(
+                            new Venta(p.Nombre, precioFinal, cant)
+                        );
+
+                        Console.WriteLine("\n¡Venta registrada exitosamente en el sistema!");
+
+                        // Generar ticket
+                        Ticket.Generar(p, cant, total);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("\nError al procesar la venta:");
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("\nStock insuficiente para realizar la venta.");
+                }
             }
             else
             {
-                Console.WriteLine("Stock insuficiente.");
+                Console.WriteLine("\nProducto no encontrado o sin stock disponible.");
             }
-        }
-        else
-        {
-            Console.WriteLine("Producto no encontrado.");
-        }
-    }
-    catch
-    {
-        Console.WriteLine("Error.");
-    }
 
-    Pausa();
-}
+            Pausa();
+        }
 
         // =========================
-        // MÉTODOS AUXILIARES (STATIC)
+        // MÉTODOS AUXILIARES
         // =========================
 
-        // Evita excepciones al leer enteros, muestra mensaje de error y pausa
-        static bool LeerEntero(string mensaje, out int valor)
+        // LEE ENTEROS Y OBLIGA A INGRESAR
+        // UN NÚMERO VÁLIDO
+        static int LeerEntero(string mensaje)
         {
-            Console.Write(mensaje);
-            string input = Console.ReadLine() ?? "";
+            int valor;
 
-            if (!int.TryParse(input, out valor))
+            while (true)
             {
-                Console.WriteLine("Número inválido.");
-                Pausa();
-                return false;
+                Console.Write(mensaje);
+
+                string input = Console.ReadLine() ?? "";
+
+                if (int.TryParse(input, out valor))
+                {
+                    return valor;
+                }
+
+                Console.WriteLine("Número inválido. Intente nuevamente.");
             }
-            return true;
         }
 
-        // Evita excepciones al leer decimales, muestra mensaje de error y pausa
-        static bool LeerDecimal(string mensaje, out decimal valor)
+        // LEE DECIMALES Y OBLIGA A INGRESAR
+        // UN VALOR VÁLIDO
+        static decimal LeerDecimal(string mensaje)
         {
-            Console.Write(mensaje);
-            string input = Console.ReadLine() ?? "";
+            decimal valor;
 
-            if (!decimal.TryParse(input, out valor))
+            while (true)
             {
-                Console.WriteLine("Número inválido.");
-                Pausa();
-                return false;
+                Console.Write(mensaje);
+
+                string input = Console.ReadLine() ?? "";
+
+                if (decimal.TryParse(input, out valor))
+                {
+                    return valor;
+                }
+
+                Console.WriteLine("Número inválido. Intente nuevamente.");
             }
-            return true;
         }
 
-        // Pausa la consola hasta que el usuario presione una tecla
+        // =========================
+        // PAUSA DE CONSOLA
+        // =========================
         static void Pausa()
         {
             Console.WriteLine("\nPresione una tecla para continuar...");

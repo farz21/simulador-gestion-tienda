@@ -15,17 +15,15 @@ namespace GestionTiendaUTN.Models
         // Atributos compartidos por todos los productos
         public int Codigo { get; set; }
         public string Nombre { get; set; }
-        public string Marca { get; set; }
         public decimal Precio { get; set; }
         public int Stock { get; set; }
 
         // CONSTRUCTOR
         // Inicializa los atributos comunes
-        public Producto(int codigo, string nombre, string marca, decimal precio, int stock)
+        public Producto(int codigo, string nombre, decimal precio, int stock)
         {
             Codigo = codigo;
             Nombre = nombre;
-            Marca = marca;
             Precio = precio;
             Stock = stock;
         }
@@ -42,9 +40,8 @@ namespace GestionTiendaUTN.Models
             Console.Write(
                 $"Cod: {Codigo} | " +
                 $"{Nombre.PadRight(12)} | " +
-                $"Marca: {Marca.PadRight(10)} | " +
                 $"Stock: {Stock.ToString().PadLeft(3)} | " +
-                $"Base: ${Precio:N2}"
+                $"Precio: ${Precio:N2}"
             );
         }
     }

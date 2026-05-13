@@ -9,8 +9,8 @@ namespace GestionTiendaUTN.Models
         public int CargaKg { get; set; }
         public string Tipo { get; set; }
 
-        public Lavarropas(int c, string n, string m, decimal p, int s, int kg, string tipo)
-            : base(c, n, m, p, s)
+        public Lavarropas(int c, string n, decimal p, int s, int kg, string tipo)
+            : base(c, n, p, s)
         {
             CargaKg = kg;
             Tipo = tipo;

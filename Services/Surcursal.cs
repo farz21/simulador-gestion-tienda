@@ -22,6 +22,13 @@ namespace GestionTiendaUTN.Services
             // Agrega un producto al inventario de la sucursal
         public void AgregarProducto(Producto p) => inventario.Add(p);
 
+        // Elimina el producto de la lista local en memoria
+        public void RemoverProductoLocal(Producto p)
+        {
+            // Elimina el producto de la lista local en memoria
+            inventario.Remove(p); 
+        }
+
         public void ListarProductos() // Muestra el inventario actual de la sucursal
         {
             Console.WriteLine($"\n--- Inventario {Nombre} ---");

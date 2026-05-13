@@ -9,8 +9,8 @@ namespace GestionTiendaUTN.Models
         public int Pulgadas { get; set; }
         public string TipoPantalla { get; set; }
 
-        public Televisor(int c, string n, string m, decimal p, int s, int pulg, string tipoPantalla)
-            : base(c, n, m, p, s)
+        public Televisor(int c, string n, decimal p, int s, int pulg, string tipoPantalla)
+            : base(c, n, p, s)
         {
             Pulgadas = pulg;
             TipoPantalla = tipoPantalla;
